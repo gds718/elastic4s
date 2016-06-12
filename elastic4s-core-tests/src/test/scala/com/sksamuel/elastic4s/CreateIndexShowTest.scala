@@ -1,7 +1,8 @@
 package com.sksamuel.elastic4s
 
+import com.sksamuel.elastic4s.mappings.AllDefinition
 import com.sksamuel.elastic4s.mappings.FieldType.{IntegerType, StringType}
-import org.scalatest.{WordSpec, Matchers}
+import org.scalatest.{Matchers, WordSpec}
 import com.sksamuel.elastic4s.testkit.ElasticSugar
 
 class CreateIndexShowTest extends WordSpec with Matchers with ElasticSugar {
@@ -21,7 +22,7 @@ class CreateIndexShowTest extends WordSpec with Matchers with ElasticSugar {
             field name "name" typed StringType,
             field name "continent" typed StringType,
             field name "iswinter" typed IntegerType
-            ) all true source true numericDetection false
+            ) all AllDefinition(true) source true numericDetection false
           ) refreshInterval 10.seconds shards 4 replicas 2
       }
       request.show shouldBe """{"settings":{"index":{"number_of_shards":4,"number_of_replicas":2,"refresh_interval":"10000ms"}},"mappings":{"characters":{"_timestamp":{"enabled":true},"_ttl":{"enabled":false},"properties":{"name":{"type":"string"},"location":{"type":"string"}}},"locations":{"_all":{"enabled":true},"_source":{"enabled":true},"numeric_detection":false,"properties":{"name":{"type":"string"},"continent":{"type":"string"},"iswinter":{"type":"integer"}}}}}"""

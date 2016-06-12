@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
 
 class MappingDefinition(val `type`: String) {
 
-  var _all: Option[Boolean] = None
+  var _all: Option[AllDefinition] = None
   var _source: Option[Boolean] = None
   var _sourceExcludes: Iterable[String] = Nil
   var date_detection: Option[Boolean] = None
@@ -32,7 +32,7 @@ class MappingDefinition(val `type`: String) {
     this
   }
 
-  def all(enabled: Boolean): this.type = {
+  def all(enabled: AllDefinition): this.type = {
     _all = Option(enabled)
     this
   }
@@ -175,7 +175,15 @@ class MappingDefinition(val `type`: String) {
 
   def build(json: XContentBuilder): Unit = {
 
-    for ( all <- _all ) json.startObject("_all").field("enabled", all).endObject()
+    _all.foreach { all =>
+      val allJson = json.startObject("_all")
+      all.enabled.foreach(allJson.field("enabled", _))
+      all.store.foreach(allJson.field("store", _))
+      all.termVector.foreach(arg => allJson.field("term_vector", arg.value))
+      all.indexAnalyzer.foreach(allJson.field("index_analyzer", _))
+      all.searchAnalyzer.foreach(allJson.field("search_analyzer", _))
+      allJson.endObject()
+    }
     (_source, _sourceExcludes) match {
       case (_, l) if l.nonEmpty => json.startObject("_source").field("excludes", l.toArray: _*).endObject()
       case (Some(source), _) => json.startObject("_source").field("enabled", source).endObject()

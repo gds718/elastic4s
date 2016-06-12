@@ -7,10 +7,10 @@ object Build extends AutoPlugin {
 
   override def trigger = AllRequirements
   override def requires = JvmPlugin
-  
+
   object autoImport {
-    val org = "com.sksamuel.elastic4s"
-  
+    val org = "qiaobutang"
+
     val ScalaVersion = "2.11.7"
     val ScalatestVersion = "2.2.5"
     val MockitoVersion = "1.9.5"
@@ -19,9 +19,9 @@ object Build extends AutoPlugin {
     val ScalaLoggingVersion = "2.1.2"
     val ElasticsearchVersion = "2.3.0"
     val Log4jVersion = "1.2.17"
-    val CommonsIoVersion = "2.4"  
+    val CommonsIoVersion = "2.4"
   }
-  
+
   import autoImport._
 
   override def projectSettings = Seq(
@@ -48,34 +48,14 @@ object Build extends AutoPlugin {
       "org.mockito" % "mockito-all" % MockitoVersion % "test",
       "org.scalatest" %% "scalatest" % ScalatestVersion % "test"
     ),
+    credentials += Credentials("Sonatype Nexus Repository Manager", "repo.qiaobutang.com", "qbt", "52b2ca75e4b068789b5bc5eb"),
     publishTo <<= version {
       (v: String) =>
-        val nexus = "https://oss.sonatype.org/"
+        val nexus = "http://repo.qiaobutang.com:9876/"
         if (v.trim.endsWith("SNAPSHOT"))
-          Some("snapshots" at nexus + "content/repositories/snapshots")
+          Some("snapshots" at nexus + "nexus/content/repositories/snapshots")
         else
-          Some("releases" at nexus + "service/local/staging/deploy/maven2")
-    },
-    pomExtra := {
-      <url>https://github.com/sksamuel/elastic4s</url>
-        <licenses>
-          <license>
-            <name>Apache 2</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
-            <distribution>repo</distribution>
-          </license>
-        </licenses>
-        <scm>
-          <url>git@github.com:sksamuel/elastic4s.git</url>
-          <connection>scm:git@github.com:sksamuel/elastic4s.git</connection>
-        </scm>
-        <developers>
-          <developer>
-            <id>sksamuel</id>
-            <name>sksamuel</name>
-            <url>http://github.com/sksamuel</url>
-          </developer>
-        </developers>
+          Some("releases" at nexus + "nexus/content/repositories/releases")
     }
   )
 }

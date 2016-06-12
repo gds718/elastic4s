@@ -1,5 +1,7 @@
 package com.sksamuel.elastic4s.admin
 
+import scala.beans.BeanProperty
+
 import com.sksamuel.elastic4s.{Executable, Indexes}
 import org.elasticsearch.action.ShardOperationFailedException
 import org.elasticsearch.action.admin.indices.cache.clear.{ClearIndicesCacheRequestBuilder, ClearIndicesCacheResponse}
@@ -10,14 +12,15 @@ import org.elasticsearch.action.admin.indices.flush.FlushResponse
 import org.elasticsearch.action.admin.indices.open.OpenIndexResponse
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentResponse
-import org.elasticsearch.action.admin.indices.stats.{ShardStats, IndexStats, CommonStats, IndicesStatsResponse}
+import org.elasticsearch.action.admin.indices.stats.{CommonStats, IndexStats, IndicesStatsResponse, ShardStats}
 import org.elasticsearch.action.support.IndicesOptions
 import org.elasticsearch.client.Client
 import org.elasticsearch.cluster.routing.ShardRouting
 import org.elasticsearch.index.engine.Segment
 import org.elasticsearch.index.shard.ShardId
-
 import scala.concurrent.Future
+
+import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse
 
 trait IndexAdminDsl {
 
@@ -83,6 +86,21 @@ trait IndexAdminDsl {
       injectFuture(c.admin.indices.prepareRefresh(t.indexes: _*).execute)
     }
   }
+
+  implicit object AnalyzeDefinitionExecutable
+    extends Executable[AnalyzeDefinition, AnalyzeResponse, AnalyzeResponse] {
+    override def apply(c: Client, t: AnalyzeDefinition): Future[AnalyzeResponse] = {
+      injectFuture(actionListener => {
+        val builder = c.admin.indices.prepareAnalyze(t.index, t.text)
+        t.getAnalyzer.foreach(builder.setAnalyzer)
+        t.getCharFilters.foreach(l => builder.setCharFilters(l: _*))
+        t.getField.foreach(builder.setField)
+        t.getTokenFilters.foreach(l => builder.setTokenFilters(l: _*))
+        t.getTokenizer.foreach(builder.setTokenizer)
+        builder.execute(actionListener)
+      })
+    }
+  }
 }
 
 case class OpenIndexDefinition(index: String)
@@ -115,6 +133,22 @@ case class ClearCacheDefinition(indexes: Seq[String],
 
 case class FlushIndexDefinition(indexes: Seq[String])
 case class RefreshIndexDefinition(indexes: Seq[String])
+
+class AnalyzeDefinition(
+  val index: String,
+  val text: String
+) {
+  @BeanProperty
+  var analyzer: Option[String] = None
+  @BeanProperty
+  var charFilters: Option[List[String]] = None
+  @BeanProperty
+  var field: Option[String] = None
+  @BeanProperty
+  var tokenFilters: Option[List[String]] = None
+  @BeanProperty
+  var tokenizer: Option[String] = None
+}
 
 case class IndicesStatsResult(original: IndicesStatsResponse) {
 

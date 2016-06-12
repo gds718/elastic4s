@@ -3,10 +3,9 @@ package com.sksamuel.elastic4s
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.analyzers._
 import com.sksamuel.elastic4s.mappings.FieldType._
-import com.sksamuel.elastic4s.mappings.{DynamicMapping, PrefixTree}
+import com.sksamuel.elastic4s.mappings.{AllDefinition, DynamicMapping, PrefixTree}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers, OneInstancePerTest}
-
 import scala.concurrent.duration._
 import scala.io.Source
 
@@ -19,7 +18,7 @@ class CreateIndexDslTest extends FlatSpec with MockitoSugar with JsonSugar with 
         id typed StringType analyzer KeywordAnalyzer store true includeInAll true,
         field("name", GeoPointType) latLon true geohash true,
         field("content", DateType) nullValue "no content"
-        ) all false size true numericDetection true boostNullValue 1.2 boost "myboost" meta Map("class" -> "com.sksamuel.User"),
+        ) all AllDefinition(true) size true numericDetection true boostNullValue 1.2 boost "myboost" meta Map("class" -> "com.sksamuel.User"),
       mapping("users").as(
         field("name", IpType) nullValue "127.0.0.1" boost 1.0,
         field("location", IntegerType) nullValue 0,
@@ -27,7 +26,7 @@ class CreateIndexDslTest extends FlatSpec with MockitoSugar with JsonSugar with 
         field("picture", AttachmentType),
         field("age", FloatType) indexName "indexName",
         field("area", GeoShapeType) tree PrefixTree.Quadtree precision "1m"
-      ) all true analyzer "somefield" dateDetection true dynamicDateFormats("mm/yyyy", "dd-MM-yyyy")
+      ) all AllDefinition(true) analyzer "somefield" dateDetection true dynamicDateFormats("mm/yyyy", "dd-MM-yyyy")
     )
     req._source.string should matchJsonResource("/json/createindex/createindex_mappings.json")
   }
@@ -277,7 +276,7 @@ class CreateIndexDslTest extends FlatSpec with MockitoSugar with JsonSugar with 
     val req = create.index("docsAndTags").mappings(
       "tags" as (
         "tag" typed StringType
-        ) parent "docs" source true all false dynamic DynamicMapping.Strict
+        ) parent "docs" source true all AllDefinition(true) dynamic DynamicMapping.Strict
     )
     req._source.string should matchJsonResource("/json/createindex/create_parent_mappings.json")
   }
@@ -288,7 +287,7 @@ class CreateIndexDslTest extends FlatSpec with MockitoSugar with JsonSugar with 
         id typed StringType analyzer KeywordAnalyzer store true includeInAll true,
         "name" typed GeoPointType latLon true geohash true,
         "content" typed DateType nullValue "no content"
-        ) all true size true numericDetection true boostNullValue 1.2 boost "myboost" timestamp true
+        ) all AllDefinition(true) size true numericDetection true boostNullValue 1.2 boost "myboost" timestamp true
     )
     req._source.string should matchJsonResource("/json/createindex/createindex_timestamp_1.json")
   }
